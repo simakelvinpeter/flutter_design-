@@ -23,7 +23,7 @@ void main() {
     await tester.enterText(find.byType(TextFormField), 'Nairobi, House 12');
     await tester.tap(find.text('Save'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Place demo order'));
+    await tester.scrollUntilVisible(find.text('Place demo order'), 200);
     await tester.tap(find.text('Place demo order'));
     await tester.pumpAndSettle();
     expect(find.textContaining('No payment was collected'), findsOneWidget);
