@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'order_tracking_screen.dart';
+import 'demo_order.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -9,6 +10,7 @@ class PaymentScreen extends StatefulWidget {
 }
 
 class _PaymentScreenState extends State<PaymentScreen> {
+  String paymentMethod = 'Cash on delivery';
   String address = 'Dereboyu Lefkosa\nToros Apt. Door 405';
   String contact = '+908743251578\nokeefe@example.com';
 
@@ -42,6 +44,16 @@ class _PaymentScreenState extends State<PaymentScreen> {
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 1,
+        onTap: (index) {
+          if (index == 2) {
+            _showContactDialog(context);
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Your demo cart is shown on this page.')),
+            );
+          }
+        },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
@@ -123,12 +135,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
             Row(
               children: [
                 Chip(
-                    label: const Text('Cash'),
+                    label: Text(paymentMethod),
                     backgroundColor: Colors.blue[100]),
                 const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.edit, color: Colors.blue),
-                  onPressed: () {},
+                  onPressed: _choosePaymentMethod,
                 ),
               ],
             ),
@@ -150,11 +162,13 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   onPressed: () {
                     showDialog(
                       context: context,
-                      builder: (context) => const OrderConfirmationDialog(),
+                      builder: (context) => OrderConfirmationDialog(
+                        order: DemoOrder(address: address, contact: contact, paymentMethod: paymentMethod),
+                      ),
                     );
                   },
                   child:
-                      const Text('Pay', style: TextStyle(color: Colors.white)),
+                      const Text('Place demo order', style: TextStyle(color: Colors.white)),
                 ),
               ],
             ),
@@ -197,31 +211,44 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  void _showAddressDialog(BuildContext context) {
-    final addressController = TextEditingController(text: address);
-    showDialog(
+  Future<void> _showAddressDialog(BuildContext context) async {
+    final value = await _editDetails('Edit Address', address, false);
+    if (value != null && mounted) setState(() => address = value);
+  }
+
+  Future<void> _showContactDialog(BuildContext context) async {
+    final value = await _editDetails('Edit Contact Information', contact, true);
+    if (value != null && mounted) setState(() => contact = value);
+  }
+
+  Future<String?> _editDetails(String title, String current, bool isContact) {
+    final form = GlobalKey<FormState>();
+    var draft = current;
+    return showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Address'),
-        content: TextField(
-          controller: addressController,
-          maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: 'Enter your address',
-            border: OutlineInputBorder(),
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Form(
+          key: form,
+          child: TextFormField(
+            initialValue: current,
+            maxLines: 3,
+            maxLength: 250,
+            onChanged: (value) => draft = value.trim(),
+            validator: (value) {
+              if ((value ?? '').trim().isEmpty) return 'Please enter your details';
+              if (isContact && !RegExp(r'\+?[0-9][0-9\s()-]{5,}').hasMatch(value!)) {
+                return 'Please include a valid phone number';
+              }
+              return null;
+            },
           ),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(dialogContext), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () {
-              setState(() {
-                address = addressController.text;
-              });
-              Navigator.pop(context);
+              if (form.currentState!.validate()) Navigator.pop(dialogContext, draft);
             },
             child: const Text('Save'),
           ),
@@ -230,42 +257,28 @@ class _PaymentScreenState extends State<PaymentScreen> {
     );
   }
 
-  void _showContactDialog(BuildContext context) {
-    final contactController = TextEditingController(text: contact);
-    showDialog(
+  Future<void> _choosePaymentMethod() async {
+    final chosen = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Edit Contact Information'),
-        content: TextField(
-          controller: contactController,
-          maxLines: 2,
-          decoration: const InputDecoration(
-            hintText: 'Enter your contact information',
-            border: OutlineInputBorder(),
+      builder: (dialogContext) => SimpleDialog(
+        title: const Text('Payment Method'),
+        children: ['Cash on delivery', 'Card (demo only)'].map((method) =>
+          SimpleDialogOption(
+            onPressed: () => Navigator.pop(dialogContext, method),
+            child: Text(method),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                contact = contactController.text;
-              });
-              Navigator.pop(context);
-            },
-            child: const Text('Save'),
-          ),
-        ],
+        ).toList(),
       ),
     );
+    if (chosen != null && mounted) setState(() => paymentMethod = chosen);
   }
+
 }
 
 class OrderConfirmationDialog extends StatelessWidget {
-  const OrderConfirmationDialog({super.key});
+  const OrderConfirmationDialog({super.key, required this.order});
+
+  final DemoOrder order;
 
   @override
   Widget build(BuildContext context) {
@@ -281,16 +294,17 @@ class OrderConfirmationDialog extends StatelessWidget {
             const Text('Congratulations!!!',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
             const SizedBox(height: 8),
-            const Text('Your order has been taken and is being attended to',
+            const Text('Demo order created. No payment was collected and no delivery was booked.',
                 textAlign: TextAlign.center),
             const SizedBox(height: 16),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
               onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
+                final navigator = Navigator.of(context);
+                navigator.pop();
+                navigator.push(
                   MaterialPageRoute(
-                      builder: (_) => const OrderTrackingScreen()),
+                      builder: (_) => OrderTrackingScreen(order: order)),
                 );
               },
               child: const Text('Track order',

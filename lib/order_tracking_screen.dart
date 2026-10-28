@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'demo_order.dart';
 
 class OrderTrackingScreen extends StatelessWidget {
-  const OrderTrackingScreen({super.key});
+  const OrderTrackingScreen({super.key, required this.order});
+
+  final DemoOrder order;
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +20,17 @@ class OrderTrackingScreen extends StatelessWidget {
         iconTheme: const IconThemeData(color: Colors.black),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        onTap: (index) {
+          if (index == 2) {
+            showDialog<void>(context: context, builder: (context) => AlertDialog(
+              title: const Text('Contact Information'),
+              content: Text(order.contact),
+              actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Close'))],
+            ));
+          } else {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+        },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(
@@ -49,19 +63,19 @@ class OrderTrackingScreen extends StatelessWidget {
                 color: Colors.blue[100],
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Order Details:',
+                  const Text('Demo Order Details:',
                       style: TextStyle(fontWeight: FontWeight.bold)),
                   SizedBox(height: 8),
-                  Text('Order ID: 0012'),
-                  Text('Order Date: 12/5/2025'),
+                  Text('Order ID: ${order.id}'),
+                  Text('Order Date: ${order.date}'),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
@@ -69,7 +83,7 @@ class OrderTrackingScreen extends StatelessWidget {
                     Text('Order Confirm',
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     SizedBox(height: 4),
-                    Text('Wed, 5th Dec', style: TextStyle(fontSize: 12)),
+                    Text(order.date, style: TextStyle(fontSize: 12)),
                   ],
                 ),
                 Column(
@@ -77,7 +91,7 @@ class OrderTrackingScreen extends StatelessWidget {
                     Text('Packaging',
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     SizedBox(height: 4),
-                    Text('Wed, 6th Dec', style: TextStyle(fontSize: 12)),
+                    const Text('Not started', style: TextStyle(fontSize: 12)),
                   ],
                 ),
                 Column(
@@ -85,7 +99,7 @@ class OrderTrackingScreen extends StatelessWidget {
                     Text('Delivered',
                         style: TextStyle(fontWeight: FontWeight.bold)),
                     SizedBox(height: 4),
-                    Text('Expected by, Fri 16th Dec',
+                    const Text('Demo only',
                         style: TextStyle(fontSize: 12)),
                   ],
                 ),
@@ -122,23 +136,23 @@ class OrderTrackingScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Payment',
+                    const Text('Payment',
                         style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text('Visa **56'),
+                    Text(order.paymentMethod),
                   ],
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Delivery',
+                    const Text('Delivery',
                         style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text('Address\nDereboyou, Lefkosa'),
+                    SizedBox(width: 170, child: Text(order.address)),
                   ],
                 ),
               ],

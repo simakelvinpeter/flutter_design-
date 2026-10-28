@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'demo_order.dart';
+import 'order_tracking_screen.dart';
 
 class OrderConfirmationScreen extends StatelessWidget {
-  const OrderConfirmationScreen({super.key});
+  const OrderConfirmationScreen({super.key, required this.order});
+
+  final DemoOrder order;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black.withOpacity(0.2),
+      backgroundColor: Colors.black.withValues(alpha: 0.2),
       body: Center(
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 32),
@@ -22,12 +26,12 @@ class OrderConfirmationScreen extends StatelessWidget {
               const SizedBox(height: 16),
               const Text('Congratulations!!!', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
               const SizedBox(height: 8),
-              const Text('Your order have been taken and is being attended to', textAlign: TextAlign.center),
+              const Text('Demo order created. No payment or delivery was booked.', textAlign: TextAlign.center),
               const SizedBox(height: 16),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
                 onPressed: () {
-                  Navigator.of(context).pushReplacementNamed('/order-tracking');
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => OrderTrackingScreen(order: order)));
                 },
                 child: const Text('Track order', style: TextStyle(color: Colors.white)),
               ),
